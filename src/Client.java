@@ -25,10 +25,22 @@ public class Client {
     }
 
     /*Default constructor
-
+    server:  By default, if no ip address is supplied to the client on construction, then it is assumed the client will be hosting the server.  So server is set to hosts local ip.  Can always change these details later.
      */
-    Client(){
+    Client() throws UnknownHostException {
 
+        InetAddress myAddr = InetAddress.getLocalHost();
+        System.out.println("My Ip Address:  " + myAddr.getHostAddress());
+        System.out.println("My Host name:  " + myAddr.getHostName());
+
+        server = myAddr.getHostAddress();
+        userName = myAddr.getHostName();
 
     }
+
+    public String getServerAddress() { return server; }
+    public void setServerAddress(String address) { server = address; }
+
+    public int getServerPort() { return port; }
+    public void setServerPort(int port) { this.port = port; }
 }
