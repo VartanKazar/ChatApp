@@ -16,7 +16,7 @@ public class Client {
 
     /*Custom constructor which takes the following parameters to allow the user to connect to a custom server with a designated port.
         server:  The address of the server for the user to connect to.
-        port:  The port number of the server (should be
+        port:  The port number of the server
      */
     Client(String server, int port, String userName){
         this.server = server;
@@ -34,6 +34,7 @@ public class Client {
         System.out.println("My Host name:  " + myAddr.getHostName());
 
         server = myAddr.getHostAddress();
+        port = 1337;
         userName = myAddr.getHostName();
 
     }
@@ -43,4 +44,6 @@ public class Client {
 
     public int getServerPort() { return port; }
     public void setServerPort(int port) { this.port = port; }
+
+    public String getMyIp() throws UnknownHostException {return InetAddress.getLocalHost().getHostAddress();}
 }

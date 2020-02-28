@@ -18,6 +18,12 @@ public class Server {
         clientList = new ArrayList<ClientThread>();
     }
 
+    public void setPort(int port){ this.port = port; }
+
+    public int getPort(){ return port; }
+
+    public String getServerIp() throws UnknownHostException { return InetAddress.getLocalHost().getHostAddress(); }
+
     public void start(){
 
         keepGoing = true;
@@ -43,6 +49,9 @@ public class Server {
                 ClientThread clientThread = new ClientThread(clientSocket, uniqueId);  //Make a thread of the client socket.
                 clientList.add(clientThread);  //Add it to the client list arrayList.
                 clientThread.start();
+
+                //Confirmation message and announcement that a new user has joined the server.
+                System.out.print("\n" + clientThread.userName + " has joined the chat!");
 
             }//End of loop to wait for connections.
 
@@ -80,4 +89,44 @@ public class Server {
         }
     }//End start method.
 
+    protected void stop(){
+        keepGoing = false;
+    }
+
+    //Used to send the message to all clients connected on the server.
+    private synchronized void broadcast(String userName, String message){
+
+        String time = date.format(new Date());  //Add a timestamp to the beginning of the message;
+        String stampedMsg = time + " - " + userName + ": " + message;  //New formatted message string which has the following layout:  <HH:mm:ss> - <user name>:  <message>
+
+        System.out.print("\n" + stampedMsg);
+
+        //Reverse loop to send this message to all connected clients.
+        //Done in reverse order incase a user has to be removed before the message is broadcasted to all, or if something goes wrong and the current user has to be removed.
+        for(int i = clientList.size(); --i >= 0;) {
+
+            ClientThread currentThread = clientList.get(i);
+
+            // try to write to the Client if it fails remove it from the list
+            if(!currentThread.writeMsg(stampedMsg)) {
+
+                clientList.remove(i);
+                System.out.print("\nDisconnected Client " + currentThread.userName + " removed from list.");
+            }
+        }
+    }//End broadcast function.
+
+    //For removing a connected client from the server when they type the terminate command
+    synchronized void remove(int id){
+        //Search the clientList array for the given id
+        for(int i = 0; i < clientList.size(); ++i){
+
+            ClientThread thread = clientList.get(i);
+
+            if (thread.id == id){
+                clientList.remove(i);
+                return;
+            }
+        }
+    }//End remove function.
 }

@@ -21,4 +21,10 @@ public class ClientThread extends Thread {
 
     }
 
+    public boolean writeMsg(String message){
+
+
+        return false;
+    }
+
 }
