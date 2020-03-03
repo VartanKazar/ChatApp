@@ -21,7 +21,7 @@ public class ClientThread extends Thread {
 
     }
 
-    public boolean writeMsg(String message){
+    public boolean writeMsg(String chatMsg){
 
 
         return false;

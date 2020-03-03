@@ -50,7 +50,7 @@ public class Server {
                 clientList.add(clientThread);  //Add it to the client list arrayList.
                 clientThread.start();
 
-                //Confirmation message and announcement that a new user has joined the server.
+                //Confirmation chatMsg and announcement that a new user has joined the server.
                 System.out.print("\n" + clientThread.userName + " has joined the chat!");
 
             }//End of loop to wait for connections.
@@ -93,16 +93,16 @@ public class Server {
         keepGoing = false;
     }
 
-    //Used to send the message to all clients connected on the server.
-    private synchronized void broadcast(String userName, String message){
+    //Used to send the chatMsg to all clients connected on the server.
+    private synchronized void broadcast(String userName, String chatMsg){
 
-        String time = date.format(new Date());  //Add a timestamp to the beginning of the message;
-        String stampedMsg = time + " - " + userName + ": " + message;  //New formatted message string which has the following layout:  <HH:mm:ss> - <user name>:  <message>
+        String time = date.format(new Date());  //Add a timestamp to the beginning of the chatMsg;
+        String stampedMsg = time + " - " + userName + ": " + chatMsg;  //New formatted chatMsg string which has the following layout:  <HH:mm:ss> - <user name>:  <chatMsg>
 
         System.out.print("\n" + stampedMsg);
 
-        //Reverse loop to send this message to all connected clients.
-        //Done in reverse order incase a user has to be removed before the message is broadcasted to all, or if something goes wrong and the current user has to be removed.
+        //Reverse loop to send this chatMsg to all connected clients.
+        //Done in reverse order incase a user has to be removed before the chatMsg is broadcasted to all, or if something goes wrong and the current user has to be removed.
         for(int i = clientList.size(); --i >= 0;) {
 
             ClientThread currentThread = clientList.get(i);

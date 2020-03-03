@@ -13,7 +13,7 @@ public class Chat {
         5:  connect <destination> <port #>
         6:  list
         7:  terminate <connection id>
-        8:  send <connection id> <message>
+        8:  send <connection id> <chatMsg>
         9:  exit
          */
         String menuSelection = "";
@@ -43,7 +43,7 @@ public class Chat {
                                         "\nconnect <destination> <port no>:  This command establishes a new TCP connection to the specified <destination> at the specified <port no>." +
                                         "\nlist:  Display a numbered list of all the connections this process is part of." +
                                         "\nterminate <connection id.>:  This command will terminate the connection listed under the specified number when LIST is used to display all connections." +
-                                        "\nsend <connection id.> <message>:  Sends a message to the specified connected user." +
+                                        "\nsend <connection id.> <chatMsg>:  Sends a chatMsg to the specified connected user." +
                                         "\nexit:  exits out of the program and the server." +
                                         "\n----------------------------------------------------------------------------------------\n");
                     break;
