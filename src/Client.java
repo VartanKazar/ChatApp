@@ -104,15 +104,7 @@ public class Client {
         }
     }
 
-    public String getServerAddress() { return server; }
-    public void setServerAddress(String address) { server = address; }
-
-    public int getServerPort() { return port; }
-    public void setServerPort(int port) { this.port = port; }
-
-    public String getMyIp() throws UnknownHostException {return InetAddress.getLocalHost().getHostAddress();}
-
-    private void disconnect() {
+    public void disconnect() {
         try {
             if(input != null) input.close();
         }

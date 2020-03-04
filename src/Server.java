@@ -129,4 +129,141 @@ public class Server {
             }
         }
     }//End remove function.
+
+    //A helper class for server.  One instance of this class (thread) will run for each client.
+    public class ClientThread extends Thread {
+
+        public Socket socket;  //The socket for listening/talking
+        public ObjectInputStream input;
+        public ObjectOutputStream output;
+
+        public int id;  //My clients unique id, used for making disconnecting easier.
+        public String userName;  //My user name
+        public String date;  //The date that I connect to the server.
+
+        public ChatMessage messageObject;  //The object message to be receiver.  Makes things simpler since passing java objects is easier than readier data streams for bits.
+
+        //Custom constructor which tries to instantiate IO streams and member variables.
+        ClientThread(Socket socket, int uniqueId){
+
+            id = ++uniqueId;
+            this.socket = socket;
+
+            System.out.print("\nThread attempting to create input/output streams.");
+
+            //Instantiate both datastreams; input and output
+            try{
+                output = new ObjectOutputStream(socket.getOutputStream());
+                input = new ObjectInputStream(socket.getInputStream());
+
+                //Read the user name
+                userName = (String) input.readObject();
+                System.out.print("\n" + userName + " has connected.");
+            }
+            catch(IOException | ClassNotFoundException e){
+                System.out.print("\nException creating new i/o streams:  " + e);
+            }
+
+            date = new Date().toString() + "\n";
+        }
+
+        //Runs forever until i log out of the server.
+        public void run(){
+
+            boolean keepGoing = true;  //Flag to indicate whether we should keep looking for input.  If false, a logout message is detected which switches this false and forces user to disconnect.
+            while(keepGoing){
+
+                //Try to read a string
+                try{
+                    messageObject = (ChatMessage) input.readObject();
+                }
+                catch(IOException | ClassNotFoundException e){
+                    System.out.print("\n" + userName + " Exception reading streams:  " + e);
+                }
+
+                //The actual text message of the messageObject java object.
+                String msg = messageObject.getMessage();
+
+                //Check the type of message to see if we should terminate or not.
+                switch(messageObject.getType()){
+
+                    case ChatMessage.MESSAGE:
+                        System.out.print("\n" + userName + ":  " + msg);
+                        break;
+
+                    case ChatMessage.LOGOUT:
+                        System.out.print("\n" + userName + " disconnected with a logout command.");
+                        break;
+
+                    case ChatMessage.USERSCONNECTED:
+                        writeMsg("\nList of users connected at " + date.format(String.valueOf(new Date())) + "\n");
+
+                        //find all users connected
+                        for(int i = 0; i < clientList.size(); ++i){
+                            ClientThread thread = clientList.get(i);
+                            writeMsg((i + 1) + ") " + thread.userName + " since " + thread.date);
+                        }
+                        break;
+
+                }//End of messageObject type switch case
+            }//End of run loop
+
+            //Remove myself from the clientList array
+            remove(id);
+            close();
+
+        }//End of run method
+
+        //Close everything for this client and the theads/io
+        private void close(){
+
+            //Try to close the users connection to the server.
+            try{
+                if(output != null)
+                    output.close();
+            } catch (Exception e) {}
+
+            //Close users input stream
+            try{
+                if(input != null)
+                    input.close();
+            }
+            catch (Exception e){}
+
+            //Close users output stream
+            try{
+                if(output != null)
+                    output.close();
+            }
+            catch (Exception e){}
+
+            //Close users socket
+            try{
+                if(socket != null)
+                    socket.close();
+            }
+            catch (Exception e){}
+
+        }
+
+        //Write the message to the output stream
+        public boolean writeMsg(String chatMsg){
+
+            //If user isnt connect, then close the socket and return false.
+            if(!socket.isConnected()){
+                close();
+                return false;
+            }
+
+            try{
+                output.writeObject(chatMsg);
+            }
+            catch(IOException e){
+                System.out.print("\nError sending message to " + userName);
+            }
+
+            return true;
+        }
+
+    }
 }

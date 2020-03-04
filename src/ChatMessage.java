@@ -2,7 +2,7 @@ import java.io.*;
 
 public class ChatMessage implements Serializable {
 
-    static final int USERSCONNECTED = 0, MESSAGE = 1, LOGOUT = 2;
+    static final int USERSCONNECTED = 0, MESSAGE = 1, LOGOUT = 2, TERMINATE = 3, SEND = 4;
     private int type;
     private String chatMsg;
 
