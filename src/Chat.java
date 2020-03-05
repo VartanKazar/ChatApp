@@ -2,6 +2,9 @@ import java.net.UnknownHostException;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.net.InetAddress;
+import java.lang.Throwable;
+import java.lang.Exception;
+
 
 public class Chat {
 
@@ -69,7 +72,7 @@ public class Chat {
         return new Client(serverAddress, port, userName);
     }
 
-    public static void connect() throws UnknownHostException {
+    public static void connect() throws UnknownHostException, InterruptedException {
 
         Client client = createClient();
 
@@ -86,6 +89,15 @@ public class Chat {
         while(true){
 
             System.out.print("\n\tinput:  ");
+
+            try{
+
+                Thread.sleep(3000); //sleep for 3 seconds
+
+            }
+            catch(InterruptedException e){
+                System.out.println("got interrupted!");
+            }
 
             String msg = input.nextLine();
 
@@ -132,7 +144,7 @@ public class Chat {
         client.disconnect();
     }
 
-    public static void main(String[] args) throws UnknownHostException {
+    public static void main(String[] args) throws UnknownHostException, InterruptedException {
 
         //Look for command line args that supply a port.
         switch(args.length){
