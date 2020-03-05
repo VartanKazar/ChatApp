@@ -112,11 +112,17 @@ public class Chat {
                         "\nexit:  exits out of the program and the server." +
                         "\n----------------------------------------------------------------------------------------\n");
 
+            //Client asks for their own ip using the myip command.
             else if (msg.equalsIgnoreCase("myip"))
                 System.out.print("\n\t" + userName + " ip address:  " + InetAddress.getLocalHost().getHostAddress());
 
+            //client asks for the port of the connection using the myport command.
             else if (msg.equalsIgnoreCase("myport"))
                 System.out.print("\n\t" + userName + " port:  " + port);
+
+            //Client boots out another user from the server using the terminate command with the given user number from the list command.
+            else if (msg.contains("terminate"))
+                client.sendMessage(new ChatMessage(ChatMessage.TERMINATE, msg));
 
             //Default case where the user inputs a generic message that is not a command.
             else client.sendMessage(new ChatMessage(ChatMessage.MESSAGE, msg));
