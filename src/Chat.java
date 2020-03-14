@@ -2,6 +2,9 @@ import java.net.UnknownHostException;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.net.InetAddress;
+import java.lang.Throwable;
+import java.lang.Exception;
+
 
 public class Chat {
 
@@ -69,7 +72,7 @@ public class Chat {
         return new Client(serverAddress, port, userName);
     }
 
-    public static void connect() throws UnknownHostException {
+    public static void connect() throws UnknownHostException, InterruptedException {
 
         Client client = createClient();
 
@@ -86,6 +89,15 @@ public class Chat {
         while(true){
 
             System.out.print("\n\tinput:  ");
+
+            try{
+
+                Thread.sleep(3000); //sleep for 3 seconds
+
+            }
+            catch(InterruptedException e){
+                System.out.println("got interrupted!");
+            }
 
             String msg = input.nextLine();
 
@@ -112,11 +124,17 @@ public class Chat {
                         "\nexit:  exits out of the program and the server." +
                         "\n----------------------------------------------------------------------------------------\n");
 
+            //Client asks for their own ip using the myip command.
             else if (msg.equalsIgnoreCase("myip"))
                 System.out.print("\n\t" + userName + " ip address:  " + InetAddress.getLocalHost().getHostAddress());
 
+            //client asks for the port of the connection using the myport command.
             else if (msg.equalsIgnoreCase("myport"))
                 System.out.print("\n\t" + userName + " port:  " + port);
+
+            //Client boots out another user from the server using the terminate command with the given user number from the list command.
+            else if (msg.contains("terminate"))
+                client.sendMessage(new ChatMessage(ChatMessage.TERMINATE, msg));
 
             //Default case where the user inputs a generic message that is not a command.
             else client.sendMessage(new ChatMessage(ChatMessage.MESSAGE, msg));
@@ -126,7 +144,7 @@ public class Chat {
         client.disconnect();
     }
 
-    public static void main(String[] args) throws UnknownHostException {
+    public static void main(String[] args) throws UnknownHostException, InterruptedException {
 
         //Look for command line args that supply a port.
         switch(args.length){

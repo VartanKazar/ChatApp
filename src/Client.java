@@ -67,17 +67,18 @@ public class Client {
         }
 
         // creates the Thread to listen from the server
-        //new ListenFromServer().start();
-        try {
-            msg = (String) input.readObject();
-            System.out.println(msg);
-            System.out.print("> ");
+        new ListenFromServer().start();
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            msg = (String) input.readObject();
+//            System.out.println(msg);
+//            System.out.print("> ");
+//
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        } catch (ClassNotFoundException e) {
+//            e.printStackTrace();
+//        }
 
 
         // Send our username to the server this is the only message that we
@@ -119,5 +120,19 @@ public class Client {
         catch(Exception e) {}
 
     }
+
+    //This class waits for the message from the server
+    class ListenFromServer extends Thread{
+        public void run(){
+            try{
+                String msg = (String) input.readObject();
+                System.out.print("\n" + msg);
+            }
+            catch(IOException | ClassNotFoundException e){
+                System.out.print("\nServer has closed the connection to:  " + e);
+            }
+        }
+
+    }//End of ListenFromServer class.
 
 }

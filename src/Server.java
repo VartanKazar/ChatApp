@@ -168,7 +168,7 @@ public class Server {
         }
 
         //Runs forever until i log out of the server.
-        public void run(){
+        public void run() {
 
             boolean keepGoing = true;  //Flag to indicate whether we should keep looking for input.  If false, a logout message is detected which switches this false and forces user to disconnect.
             while(keepGoing){
@@ -193,16 +193,34 @@ public class Server {
 
                     case ChatMessage.LOGOUT:
                         System.out.print("\n" + userName + " disconnected with a logout command.");
+                        keepGoing = false;
                         break;
 
                     case ChatMessage.USERSCONNECTED:
-                        writeMsg("\nList of users connected at " + date.format(String.valueOf(new Date())) + "\n");
+                        writeMsg("\n-----------------------------------------------\nList of users\n" +
+                                            "\tId\t" + "Ip Address\t\t\t" + "Port\n");
 
                         //find all users connected
                         for(int i = 0; i < clientList.size(); ++i){
                             ClientThread thread = clientList.get(i);
-                            writeMsg((i + 1) + ") " + thread.userName + " since " + thread.date);
+                            try {
+                                writeMsg("\n\t" + i + ":\t" + thread.socket.getInetAddress().getLocalHost().getHostAddress() + "\t\t" + thread.socket.getPort());
+                            } catch (UnknownHostException e) {
+                                e.printStackTrace();
+                            }
                         }
+
+                        break;
+
+                    case ChatMessage.TERMINATE:
+
+                        //Get the different parts of the terminate command which are split by a space delimiter.
+                        //First part of the string should be the terminate key word.
+                        //Second part of the string should be the connection id of the client listed from the list command.
+                        String msgCommands[] = msg.split(" ");
+
+                        ClientThread thread = clientList.get(Integer.parseInt(msgCommands[1]));
+
                         break;
 
                 }//End of messageObject type switch case
