@@ -2,15 +2,16 @@ import java.net.UnknownHostException;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.net.InetAddress;
-import java.lang.Throwable;
 import java.lang.Exception;
 
 
 public class Chat {
 
-    private static int port;
+    private static int port = 8080;
     private static String serverAddress;
     private static String userName;
+
+    private static Scanner input;
 
     //Takes a string input for the serverIp from the user and validates it with regex comparison.
     private static boolean validateIp(final String ip) {
@@ -30,7 +31,7 @@ public class Chat {
         String customServer = "";
         int customPort = 0;
 
-        Scanner input = new Scanner(System.in);
+        input = new Scanner(System.in);
 
         try{
             System.out.print("\n\t" + "Enter server ip or leave blank for localhost default:  ");
@@ -42,7 +43,8 @@ public class Chat {
 
         try{
             System.out.print("\n\t" + "Enter port or leave blank for 1337 default:  ");
-            customPort = input.nextInt();
+
+            customPort = Integer.parseInt("0" + input.nextLine());
         }
         catch(InputMismatchException e){
             System.out.print("\nInput mismatch exception:  " + e);
@@ -69,6 +71,7 @@ public class Chat {
             port = customPort;
 
         input.close();
+
         return new Client(serverAddress, port, userName);
     }
 
@@ -77,29 +80,26 @@ public class Chat {
         Client client = createClient();
 
         //Check if client has been correctly created and is not null.
-        if (client == null)
+        if (client == null) {
+            System.out.print("\n\nClient has not been created yet.  Cannot attempt to connect to server when client is null!");
             return;
+        }
 
         //Test if we can start the connection to the server with the new client object.
-        if (!client.start())
+        if (!client.start()) {
+            System.out.print("\n\nClient has failed to start!");
             return;
+        }
 
-        Scanner input = new Scanner(System.in);
+        input = new Scanner(System.in);
 
         while(true){
 
             System.out.print("\n\tinput:  ");
 
-            try{
-
-                Thread.sleep(3000); //sleep for 3 seconds
-
-            }
-            catch(InterruptedException e){
-                System.out.println("got interrupted!");
-            }
-
             String msg = input.nextLine();
+
+            System.out.print("\n\tYou typed:  " + msg);
 
             //Log out of server if user typed the logout message.
             if (msg.equalsIgnoreCase("exit")){
@@ -146,13 +146,15 @@ public class Chat {
 
     public static void main(String[] args) throws UnknownHostException, InterruptedException {
 
+        Server server = null;
+
         //Look for command line args that supply a port.
         switch(args.length){
 
-            //No command line port was given, so by default port will be set to 1337.
+            //No command line port was given, so by default port will be set to 8080.
             case 0:
                 System.out.print("\nNo command line argument given on start, defaulting to port 1337...");
-                port = 1337;
+                port = 8080;
                 break;
 
             //When 1 argument is passed in the command line parameters when running.
@@ -170,14 +172,15 @@ public class Chat {
         //Main splash screen logic for the program.
         String menuSelection = "";
 
-        Scanner input = new Scanner(System.in);
+        input = new Scanner(System.in);
 
         //Main program loop to wait for user input and act accordingly.
         while(!menuSelection.equalsIgnoreCase("exit")){
 
             System.out.print("\n--------------  MAIN MENU  -----------------\n" +
                             "1.  startserver:  Create a new server on your machine using your local ip.\n" +
-                            "2.  connect <destination> <port no>:  This command establishes a new TCP connection to the specified <destination> at the specified <port no>.\n" +
+                            "2.  connect:  Prompts you for a server ip and port to connect to.\n" +
+                            "3.  stopserver:  If a server exists on this machine, this command will close all connections to it, then stop the server." +
                             "3.  exit:  terminate this process.\n");
 
             System.out.print("\n\tcmd:  ");
@@ -191,8 +194,9 @@ public class Chat {
                 case "startserver":
 
                     System.out.print("\n\tStarting server on given port " + port + "....");
-                    Server server = new Server(port);  //Instantiate new server with the given port
-                    server.start();  //Start the server by calling the start method.
+
+                    server = new Server(port);  //Instantiate new server with the given port
+                    new Thread(server).start();
 
                     break;
 
@@ -200,7 +204,15 @@ public class Chat {
                     connect();
                     break;
 
+                case "stopserver":
+                    System.out.print("\n\nStopping server...");
+
+                    if (server != null)
+                        server.stop();
+                    break;
+
                 case "exit":
+                    input.close();
                     System.out.print("\n\n\tShutting down the process...");
                     break;
 
@@ -211,6 +223,5 @@ public class Chat {
             }//End switch case for user input.
         }//End main while loop for user input.
 
-        input.close();
     }
 }

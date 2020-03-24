@@ -1,160 +1,117 @@
-import java.io.*;
-import java.net.*;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.net.ServerSocket;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.io.IOException;
+import java.util.ArrayList;
 
-//The server which runs on a designated ip and port.  Handles all incoming connections and their I/O.
-public class Server {
+public class Server implements Runnable {
 
-    private static int uniqueId;                     //A unique id for each connection on the server.
-    private ArrayList<ClientThread> clientList;     //A list of clients on the server
-    private SimpleDateFormat date;                  //Used to display the times of connections and messages in the server.
-    private int port;                               //The port number to listen to for the connection.  This is what the client types in to join the chat room.
-    private boolean keepGoing;                      //Used to indicate whether the server should start or stop.
+    protected int port = 8080;
+    protected ServerSocket serverSocket = null;
+    protected boolean isStopped = false;
+    protected Thread runningThread = null;
 
-    Server(int port){
+    private static int uniqueId;    //A unique id for each connection on the server.
+    private ArrayList<Server.ServerThread> clientList;     //A list of clients on the server
+
+    public Server (int port){
         this.port = port;
-        date = new SimpleDateFormat("HH:mm:ss");
-        clientList = new ArrayList<ClientThread>();
+        clientList = new ArrayList<Server.ServerThread>();
     }
 
-    public void setPort(int port){ this.port = port; }
 
-    public int getPort(){ return port; }
+    @Override
+    public void run() {
 
-    public String getServerIp() throws UnknownHostException { return InetAddress.getLocalHost().getHostAddress(); }
+        synchronized (this){
+            this.runningThread = Thread.currentThread();
+        }
 
-    public void start(){
+        openServerSocket();
 
-        keepGoing = true;
+        while(!isStopped){
+            Socket clientSocket = null;
 
-        //Create a new socket for the server and wait for connection requests.
-        try{
+            try {
+                clientSocket = this.serverSocket.accept();
+            }
 
-            //The socket used by the server.
-            ServerSocket serverSocket = new ServerSocket(port);
+            catch (IOException e) {
 
-            //As long as keepGoing is true, the server will wait for connections.
-            while(keepGoing){
-
-                System.out.print("\nServer waiting for clients on port:  " + port);
-
-                //New socket for incoming connections.
-                Socket clientSocket = serverSocket.accept();
-
-                //Check if server was asked to stop when switching keepGoing to false.  If asked to stop, break out of the while loop and stop waiting for connections.
-                if (!keepGoing)
-                    break;
-
-                ClientThread clientThread = new ClientThread(clientSocket, uniqueId);  //Make a thread of the client socket.
-                clientList.add(clientThread);  //Add it to the client list arrayList.
-                clientThread.start();
-
-                //Confirmation chatMsg and announcement that a new user has joined the server.
-                System.out.print("\n" + clientThread.userName + " has joined the chat!");
-
-            }//End of loop to wait for connections.
-
-            //When keepGoing is detected false, the loop is broken and the server is asked to stop.
-            try{
-
-                serverSocket.close();
-
-                //Boot out and close all of the socket threads in the clientThreads list
-                for (int i = 0; i < clientList.size(); ++i){
-
-                    ClientThread currentThread = clientList.get(i);
-
-                    try{
-                        currentThread.input.close();
-                        currentThread.output.close();
-                        currentThread.socket.close();
-                    }//End inner-most try-catch for closing individual clients sockets in the clientThread list.
-                    catch(IOException e){
-
-                    }
+                if(isStopped()) {
+                    System.out.println("Server Stopped.") ;
+                    return;
                 }
-            }//End of inner try-catch for stopping the server.
-            catch(Exception e){
-                System.out.print("\nException closing the server and its clients:  " + e);
+
+                throw new RuntimeException("Error accepting client connection", e);
             }
 
+            ServerThread clientThread = new ServerThread(clientSocket);
 
-        }//End of main try-catch for opening a new socket with a port.
-
-        //Something went wrong, maybe port not specified or used.
-        catch (IOException e){
-            String errorMsg = "\n" +  date.format(new Date()) + " Exception on new server socket:  " + e + "\n";
-            System.out.print(errorMsg);
+            new Thread(clientThread).start();
+            clientList.add(clientThread);  //Add it to the client list arrayList.
         }
-    }//End start method.
 
-    protected void stop(){
-        keepGoing = false;
+        System.out.println("Server Stopped.") ;
+
     }
 
-    //Used to send the chatMsg to all clients connected on the server.
-    private synchronized void broadcast(String userName, String chatMsg){
+    private synchronized boolean isStopped(){ return isStopped; }
 
-        String time = date.format(new Date());  //Add a timestamp to the beginning of the chatMsg;
-        String stampedMsg = time + " - " + userName + ": " + chatMsg;  //New formatted chatMsg string which has the following layout:  <HH:mm:ss> - <user name>:  <chatMsg>
+    public synchronized void stop(){
 
-        System.out.print("\n" + stampedMsg);
+        this.isStopped = true;
 
-        //Reverse loop to send this chatMsg to all connected clients.
-        //Done in reverse order incase a user has to be removed before the chatMsg is broadcasted to all, or if something goes wrong and the current user has to be removed.
-        for(int i = clientList.size(); --i >= 0;) {
+        try {
 
-            ClientThread currentThread = clientList.get(i);
+            //Close all client socket connections and IOs frist before attempting to close the server down.
+            for (int i = 0; i < clientList.size(); ++i){
 
-            // try to write to the Client if it fails remove it from the list
-            if(!currentThread.writeMsg(stampedMsg)) {
+                Server.ServerThread currentThread = clientList.get(i);
 
-                clientList.remove(i);
-                System.out.print("\nDisconnected Client " + currentThread.userName + " removed from list.");
+                try{
+                    currentThread.input.close();
+                    currentThread.output.close();
+                    currentThread.clientSocket.close();
+                }//End inner-most try-catch for closing individual clients sockets in the clientThread list.
+                catch(IOException e){
+
+                }
             }
+
+            this.serverSocket.close();
+        } catch (IOException e) {
+            throw new RuntimeException("Error closing server", e);
         }
-    }//End broadcast function.
+    }
 
-    //For removing a connected client from the server when they type the terminate command
-    synchronized void remove(int id){
-        //Search the clientList array for the given id
-        for(int i = 0; i < clientList.size(); ++i){
-
-            ClientThread thread = clientList.get(i);
-
-            if (thread.id == id){
-                clientList.remove(i);
-                return;
-            }
+    //Opens a server socket on the current machine with their local ip and port.
+    private void openServerSocket() {
+        try {
+            this.serverSocket = new ServerSocket(this.port);
+        } catch (IOException e) {
+            throw new RuntimeException("Cannot open port " + port, e);
         }
-    }//End remove function.
+    }
 
-    //A helper class for server.  One instance of this class (thread) will run for each client.
-    public class ClientThread extends Thread {
 
-        public Socket socket;  //The socket for listening/talking
+    //A helper class for the server.  Rather than processing the incoming requests in the same thread that accepts the client connection, the connection is handed off to a worker thread that processes the request.
+    public class ServerThread implements Runnable {
+
+        protected Socket clientSocket = null;
+        protected String userName = "";
+
         public ObjectInputStream input;
         public ObjectOutputStream output;
 
-        public int id;  //My clients unique id, used for making disconnecting easier.
-        public String userName;  //My user name
-        public String date;  //The date that I connect to the server.
-
-        public ChatMessage messageObject;  //The object message to be receiver.  Makes things simpler since passing java objects is easier than readier data streams for bits.
-
-        //Custom constructor which tries to instantiate IO streams and member variables.
-        ClientThread(Socket socket, int uniqueId){
-
-            id = ++uniqueId;
-            this.socket = socket;
-
-            System.out.print("\nThread attempting to create input/output streams.");
+        public ServerThread (Socket clientSocket){
+            this.clientSocket = clientSocket;
 
             //Instantiate both datastreams; input and output
             try{
-                output = new ObjectOutputStream(socket.getOutputStream());
-                input = new ObjectInputStream(socket.getInputStream());
+                input = new ObjectInputStream(clientSocket.getInputStream());
+                output = new ObjectOutputStream(clientSocket.getOutputStream());
 
                 //Read the user name
                 userName = (String) input.readObject();
@@ -163,125 +120,23 @@ public class Server {
             catch(IOException | ClassNotFoundException e){
                 System.out.print("\nException creating new i/o streams:  " + e);
             }
-
-            date = new Date().toString() + "\n";
         }
 
-        //Runs forever until i log out of the server.
+        @Override
         public void run() {
 
-            boolean keepGoing = true;  //Flag to indicate whether we should keep looking for input.  If false, a logout message is detected which switches this false and forces user to disconnect.
-            while(keepGoing){
-
-                //Try to read a string
-                try{
-                    messageObject = (ChatMessage) input.readObject();
-                }
-                catch(IOException | ClassNotFoundException e){
-                    System.out.print("\n" + userName + " Exception reading streams:  " + e);
-                }
-
-                //The actual text message of the messageObject java object.
-                String msg = messageObject.getMessage();
-
-                //Check the type of message to see if we should terminate or not.
-                switch(messageObject.getType()){
-
-                    case ChatMessage.MESSAGE:
-                        System.out.print("\n" + userName + ":  " + msg);
-                        break;
-
-                    case ChatMessage.LOGOUT:
-                        System.out.print("\n" + userName + " disconnected with a logout command.");
-                        keepGoing = false;
-                        break;
-
-                    case ChatMessage.USERSCONNECTED:
-                        writeMsg("\n-----------------------------------------------\nList of users\n" +
-                                            "\tId\t" + "Ip Address\t\t\t" + "Port\n");
-
-                        //find all users connected
-                        for(int i = 0; i < clientList.size(); ++i){
-                            ClientThread thread = clientList.get(i);
-                            try {
-                                writeMsg("\n\t" + i + ":\t" + thread.socket.getInetAddress().getLocalHost().getHostAddress() + "\t\t" + thread.socket.getPort());
-                            } catch (UnknownHostException e) {
-                                e.printStackTrace();
-                            }
-                        }
-
-                        break;
-
-                    case ChatMessage.TERMINATE:
-
-                        //Get the different parts of the terminate command which are split by a space delimiter.
-                        //First part of the string should be the terminate key word.
-                        //Second part of the string should be the connection id of the client listed from the list command.
-                        String msgCommands[] = msg.split(" ");
-
-                        ClientThread thread = clientList.get(Integer.parseInt(msgCommands[1]));
-
-                        break;
-
-                }//End of messageObject type switch case
-            }//End of run loop
-
-            //Remove myself from the clientList array
-            remove(id);
-            close();
-
-        }//End of run method
-
-        //Close everything for this client and the theads/io
-        private void close(){
-
-            //Try to close the users connection to the server.
             try{
-                if(output != null)
-                    output.close();
-            } catch (Exception e) {}
+                output = new ObjectOutputStream(clientSocket.getOutputStream());
+                input = new ObjectInputStream(clientSocket.getInputStream());
 
-            //Close users input stream
-            try{
-                if(input != null)
-                    input.close();
+
             }
-            catch (Exception e){}
+            catch (IOException e){
 
-            //Close users output stream
-            try{
-                if(output != null)
-                    output.close();
             }
-            catch (Exception e){}
-
-            //Close users socket
-            try{
-                if(socket != null)
-                    socket.close();
-            }
-            catch (Exception e){}
 
         }
-
-        //Write the message to the output stream
-        public boolean writeMsg(String chatMsg){
-
-            //If user isnt connect, then close the socket and return false.
-            if(!socket.isConnected()){
-                close();
-                return false;
-            }
-
-            try{
-                output.writeObject(chatMsg);
-            }
-            catch(IOException e){
-                System.out.print("\nError sending message to " + userName);
-            }
-
-            return true;
-        }
-
     }
+
 }
+
