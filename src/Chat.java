@@ -1,3 +1,4 @@
+import java.io.InputStream;
 import java.net.UnknownHostException;
 import java.util.InputMismatchException;
 import java.util.Scanner;
@@ -90,57 +91,65 @@ public class Chat {
             System.out.print("\n\nClient has failed to start!");
             return;
         }
-
-        input = new Scanner(System.in);
-
-        while(true){
-
-            System.out.print("\n\tinput:  ");
-
-            String msg = input.nextLine();
-
-            System.out.print("\n\tYou typed:  " + msg);
-
-            //Log out of server if user typed the logout message.
-            if (msg.equalsIgnoreCase("exit")){
-                client.sendMessage(new ChatMessage(ChatMessage.LOGOUT, ""));
-                break;
-            }
-
-            //Client requests a list of connected users with the list command.
-            else if (msg.equalsIgnoreCase("list"))
-                client.sendMessage(new ChatMessage(ChatMessage.USERSCONNECTED, ""));
-
-            //Client asks for help with the help command.  No other users are required to see this so it isn't transmitted.
-            else if (msg.equalsIgnoreCase("help"))
-                System.out.print("\n----------------------------------------------------------------------------------------\n" +
-                        "\t\t\tAvailable Commands" +
-                        "\nhelp:  Display information about the available user interface options or command manual." +
-                        "\nmyip:  Display the IP address of this process." +
-                        "\nmyport:  Display the port on which this process is listening for incoming connections." +
-                        "\nlist:  Display a numbered list of all the connections this process is part of." +
-                        "\nterminate <connection id.>:  This command will terminate the connection listed under the specified number when LIST is used to display all connections." +
-                        "\nsend <connection id.> <chatMsg>:  Sends a chatMsg to the specified connected user." +
-                        "\nexit:  exits out of the program and the server." +
-                        "\n----------------------------------------------------------------------------------------\n");
-
-            //Client asks for their own ip using the myip command.
-            else if (msg.equalsIgnoreCase("myip"))
-                System.out.print("\n\t" + userName + " ip address:  " + InetAddress.getLocalHost().getHostAddress());
-
-            //client asks for the port of the connection using the myport command.
-            else if (msg.equalsIgnoreCase("myport"))
-                System.out.print("\n\t" + userName + " port:  " + port);
-
-            //Client boots out another user from the server using the terminate command with the given user number from the list command.
-            else if (msg.contains("terminate"))
-                client.sendMessage(new ChatMessage(ChatMessage.TERMINATE, msg));
-
-            //Default case where the user inputs a generic message that is not a command.
-            else client.sendMessage(new ChatMessage(ChatMessage.MESSAGE, msg));
-        }
-
-        input.close();
+//
+//        input = new Scanner(System.in);
+//
+//        while(true){
+//
+//            System.out.print("\n\tinput:  ");
+//
+//            String msg = input.nextLine();
+//
+//            System.out.print("\n\tYou typed:  " + msg);
+//
+//            //Log out of server if user typed the logout message.
+//            if (msg.equalsIgnoreCase("exit")){
+//
+//                break;
+//            }
+//
+//            //Client requests a list of connected users with the list command.
+//            else if (msg.equalsIgnoreCase("list")){
+//
+//            }
+//
+//
+//            //Client asks for help with the help command.  No other users are required to see this so it isn't transmitted.
+//            else if (msg.equalsIgnoreCase("help")){
+//                System.out.print("\n----------------------------------------------------------------------------------------\n" +
+//                        "\t\t\tAvailable Commands" +
+//                        "\nhelp:  Display information about the available user interface options or command manual." +
+//                        "\nmyip:  Display the IP address of this process." +
+//                        "\nmyport:  Display the port on which this process is listening for incoming connections." +
+//                        "\nlist:  Display a numbered list of all the connections this process is part of." +
+//                        "\nterminate <connection id.>:  This command will terminate the connection listed under the specified number when LIST is used to display all connections." +
+//                        "\nsend <connection id.> <chatMsg>:  Sends a chatMsg to the specified connected user." +
+//                        "\nexit:  exits out of the program and the server." +
+//                        "\n----------------------------------------------------------------------------------------\n");
+//            }
+//
+//            //Client asks for their own ip using the myip command.
+//            else if (msg.equalsIgnoreCase("myip")){
+//                System.out.print("\n\t" + userName + " ip address:  " + InetAddress.getLocalHost().getHostAddress());
+//            }
+//
+//            //client asks for the port of the connection using the myport command.
+//            else if (msg.equalsIgnoreCase("myport")){
+//                System.out.print("\n\t" + userName + " port:  " + port);
+//            }
+//
+//            //Client boots out another user from the server using the terminate command with the given user number from the list command.
+//            else if (msg.contains("terminate")){
+//
+//            }
+//
+//            //Default case where the user inputs a generic message that is not a command.
+//            else {
+//
+//            }
+//        }
+//
+//        input.close();
         client.disconnect();
     }
 

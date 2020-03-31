@@ -1,6 +1,4 @@
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -9,8 +7,8 @@ import java.net.UnknownHostException;
 public class Client {
 
     //Main communication variables + server socket.
-    private ObjectInputStream input;    //Used to read from the socket.
-    private ObjectOutputStream output;  //Used to write on the socket
+    private InputStream input;    //Used to read from the socket.
+    private OutputStream output;  //Used to write on the socket
     private Socket socket;
 
     //Details for the client and the server.
@@ -41,6 +39,7 @@ public class Client {
         server = myAddr.getHostAddress();
         port = 1337;
         userName = myAddr.getHostName();
+        System.out.print("\nUser Name:  " + userName);
 
     }
 
@@ -58,9 +57,12 @@ public class Client {
         /* Creating both Data Stream */
         try
         {
-            input  = new ObjectInputStream(socket.getInputStream());
-            output = new ObjectOutputStream(socket.getOutputStream());
+            System.out.print("\nEntered Client Start!");
+
+            input  = socket.getInputStream();
+            output = socket.getOutputStream();
         }
+
         catch (IOException eIO) {
             System.out.print("Exception creating new Input/output Streams: " + eIO);
             return false;
@@ -85,7 +87,9 @@ public class Client {
         // will send as a String. All other messages will be ChatMessage objects
         try
         {
-            output.writeObject(userName);
+
+            byte[] uName = userName.getBytes();
+            output.write(uName);
         }
         catch (IOException eIO) {
             System.out.print("Exception doing login : " + eIO);
@@ -96,9 +100,9 @@ public class Client {
         return true;
     }
 
-    void sendMessage(ChatMessage msg) {
+    void sendMessage(String msg) {
         try {
-            output.writeObject(msg);
+            output.write(Integer.parseInt(msg));
         }
         catch(IOException e) {
             System.out.print("Exception writing to server: " + e);
@@ -125,10 +129,10 @@ public class Client {
     class ListenFromServer extends Thread{
         public void run(){
             try{
-                String msg = (String) input.readObject();
-                System.out.print("\n" + msg);
+                int msg = input.read();
+                System.out.print("\nMSG Listen from server:  " + msg);
             }
-            catch(IOException | ClassNotFoundException e){
+            catch(IOException e){
                 System.out.print("\nServer has closed the connection to:  " + e);
             }
         }

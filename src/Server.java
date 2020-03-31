@@ -4,6 +4,8 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Server implements Runnable {
 
@@ -11,6 +13,7 @@ public class Server implements Runnable {
     protected ServerSocket serverSocket = null;
     protected boolean isStopped = false;
     protected Thread runningThread = null;
+    private final Lock mutex = new ReentrantLock(true);
 
     private static int uniqueId;    //A unique id for each connection on the server.
     private ArrayList<Server.ServerThread> clientList;     //A list of clients on the server
@@ -95,6 +98,16 @@ public class Server implements Runnable {
         }
     }
 
+    public void writeString(ServerThread thread, String s)
+    {
+        mutex.lock();
+
+        for(ServerThread th:clientList)
+            if(th != null && th != thread) //different from the thread receiving the string
+                th.writeString(s);  //send string to other threads
+
+        mutex.unlock();
+    }
 
     //A helper class for the server.  Rather than processing the incoming requests in the same thread that accepts the client connection, the connection is handed off to a worker thread that processes the request.
     public class ServerThread implements Runnable {
@@ -136,7 +149,15 @@ public class Server implements Runnable {
             }
 
         }
-    }
 
+        public void writeString(String s)
+        {
+//            mutex.lock();
+//            output.println(s);
+//            output.flush();
+//            mutex.unlock();
+        }
+
+    }//End ServerThread class
 }
 
