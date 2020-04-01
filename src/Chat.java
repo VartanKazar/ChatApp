@@ -12,7 +12,8 @@ public class Chat {
     private static int port = 8080;
     private static String serverAddress;
 
-    private static Scanner input;
+    //private static Scanner input;
+    public static Scanner input = new Scanner(System.in);
 
     //Takes a string input for the serverIp from the user and validates it with regex comparison.
     private static boolean validateIp(final String ip) {
@@ -31,7 +32,7 @@ public class Chat {
         String customServer = "";
         int customPort = 0;
 
-        input = new Scanner(System.in);
+
 
         try{
             System.out.print("\n\t" + "Enter server ip or leave blank for localhost default:  ");
@@ -70,7 +71,7 @@ public class Chat {
         if (customPort != 0)
             port = customPort;
 
-        input.close();
+        //input.close();
 
         return new Client(port, serverAddress);
     }
@@ -127,7 +128,7 @@ public class Chat {
         input = new Scanner(System.in);
 
         //Main program loop to wait for user input and act accordingly.
-        while(!menuSelection.equalsIgnoreCase("exit")){
+        while(!menuSelection.equalsIgnoreCase("/exit")){
 
             System.out.print("\n--------------  MAIN MENU  -----------------\n" +
                             "1.  /startserver:  Create a new server on your machine using your local ip.\n" +
@@ -157,7 +158,7 @@ public class Chat {
                     break;
 
                 case "/exit":
-                    input.close();
+                    //input.close();
                     System.out.print("\n\n\tShutting down the process...");
                     break;
 

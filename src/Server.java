@@ -1,8 +1,10 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 public class Server implements Runnable {
@@ -58,7 +60,7 @@ public class Server implements Runnable {
             try{
                //Accept the incoming connection request from the client to the server.
                 clientSocket = serverSocket.accept();
-                System.out.print("\n\nNew client has been accepted in the server:  " + clientSocket);
+                System.out.print("\n\nNew client has been accepted in the server:  " + clientSocket + "\n");
 
                 //Get IO streams for the client to send to the thread.
                 DataInputStream input = new DataInputStream(clientSocket.getInputStream());
@@ -153,20 +155,26 @@ public class Server implements Runnable {
             //Commands start with / character at beginning.
             if (commands[0].charAt(0) == '/'){
                 if (commands[0].equalsIgnoreCase("/help")){
-                    System.out.print("\n\n\t" + "1.  /myip\n" +
+                    System.out.print("\n" +
+                                    "1.  /myip\n" +
                                     "2.  /myport\n" +
                                     "3.  /list\n" +
                                     "4.  /myip\n" +
                                     "5.  /terminate <client name>\n" +
                                     "6.  /send <client name> <message>\n" +
-                                    "7.  /exit");
+                                    "7.  /exit\n");
                 }
 
-                else if (commands[0].equalsIgnoreCase("/myip"))
-                    System.out.print("\n\n\tMy Ip:  " + clientSocket.getInetAddress().getHostAddress());
+                else if (commands[0].equalsIgnoreCase("/myip")) {
+                    try {
+                        System.out.println("\n\tMy Ip:  " + InetAddress.getLocalHost().getHostAddress() + "\n");
+                    } catch (UnknownHostException e) {
+                        e.printStackTrace();
+                    }
+                }
 
                 else if (commands[0].equalsIgnoreCase("/myport"))
-                    System.out.print("\n\n\tListen Port:  " + port);
+                    System.out.println("\n\tListen Port:  " + port);
 
                 else if (commands[0].equalsIgnoreCase("/list")){
 

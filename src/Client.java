@@ -16,12 +16,15 @@ public class Client {
     //The input and output streams for the socket and the user.
     DataInputStream inputStream;
     DataOutputStream outputStream;
-    Scanner userInput;
 
     public Client(int port, String server){
         this.port = port;
         this.server = server;
         isDisconnected = true;
+    }
+
+    public void setScanner(){
+       String blah =  Chat.input.nextLine();
     }
 
     //Starts up the clients connection to the desired server with a given port.
@@ -30,7 +33,6 @@ public class Client {
         //Initialize IO streams and socket.
         try {
             socket = new Socket(server, port);  //Establish a connection from the client to the server using a given port.
-            userInput = new Scanner(System.in);
             inputStream = new DataInputStream(socket.getInputStream());
             outputStream = new DataOutputStream(socket.getOutputStream());
             isDisconnected = false;
@@ -46,8 +48,7 @@ public class Client {
             public void run() {
                 //Continuously grab user input for the chat and send it to server socket.
                 while (true){
-
-                    String message = userInput.nextLine();
+                    String message = Chat.input.nextLine();
 
                     try {
                         outputStream.writeUTF(message);
