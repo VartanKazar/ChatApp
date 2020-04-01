@@ -1,9 +1,3 @@
-<<<<<<< refs/remotes/origin/Dev_Kiyan
-import java.io.*;
-import java.net.*;
-import java.text.SimpleDateFormat;
-import java.util.*;
-=======
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -35,115 +29,122 @@ public class Server implements Runnable {
             //Accept the incoming connection request from the client to the server.
             clientSocket = serverSocket.accept();
             System.out.println("New client has been accepted in the server:  " + clientSocket
-                              +"\nYou can now type messages to everyone");
->>>>>>> local
+                    +"\nYou can now type messages to everyone");
 
-//The server which runs on a designated ip and port.  Handles all incoming connections and their I/O.
-public class Server {
+            //Get IO streams for the client to send to the thread.
+            DataInputStream input = new DataInputStream(clientSocket.getInputStream());
+            DataOutputStream output = new DataOutputStream(clientSocket.getOutputStream());
 
-    private static int uniqueId;                     //A unique id for each connection on the server.
-    private ArrayList<ClientThread> clientList;     //A list of clients on the server
-    private SimpleDateFormat date;                  //Used to display the times of connections and messages in the server.
-    private int port;                               //The port number to listen to for the connection.  This is what the client types in to join the chat room.
-    private boolean keepGoing;                      //Used to indicate whether the server should start or stop.
+            //Default user name which is just the word client concatenated with their position in the server array list.
+            String userName = "Client" + clientList.size();
 
-    Server(int port){
-        this.port = port;
-        date = new SimpleDateFormat("HH:mm:ss");
-        clientList = new ArrayList<ClientThread>();
+            ClientThread client = new ClientThread(clientSocket, userName, input, output);
+
+            Thread clientThread = new Thread(client);
+            clientList.add(client);
+            clientThread.start();
+        }
+
     }
 
-    public void setPort(int port){ this.port = port; }
+    @Override
+    public void run() {
 
-    public int getPort(){ return port; }
+        synchronized (this){
+            this.runningThread = Thread.currentThread();
+        }
 
-    public String getServerIp() throws UnknownHostException { return InetAddress.getLocalHost().getHostAddress(); }
+        Socket clientSocket;
 
-    public void start(){
+        while(true){
 
-<<<<<<< refs/remotes/origin/Dev_Kiyan
-        keepGoing = true;
-=======
             try{
-               //Accept the incoming connection request from the client to the server.
+                //Accept the incoming connection request from the client to the server.
                 clientSocket = serverSocket.accept();
                 System.out.println("New client has been accepted in the server: " + clientSocket);
->>>>>>> local
 
-        //Create a new socket for the server and wait for connection requests.
-        try{
+                //Get IO streams for the client to send to the thread.
+                DataInputStream input = new DataInputStream(clientSocket.getInputStream());
+                DataOutputStream output = new DataOutputStream(clientSocket.getOutputStream());
 
-            //The socket used by the server.
-            ServerSocket serverSocket = new ServerSocket(port);
+                //Default user name which is just the word client concatenated with their position in the server array list.
+                String userName = "Client" + clientList.size();
 
-            //As long as keepGoing is true, the server will wait for connections.
-            while(keepGoing){
+                ClientThread client = new ClientThread(clientSocket, userName, input, output);
 
-                System.out.print("\nServer waiting for clients on port:  " + port);
-
-                //New socket for incoming connections.
-                Socket clientSocket = serverSocket.accept();
-
-                //Check if server was asked to stop when switching keepGoing to false.  If asked to stop, break out of the while loop and stop waiting for connections.
-                if (!keepGoing)
-                    break;
-
-                ClientThread clientThread = new ClientThread(clientSocket, uniqueId);  //Make a thread of the client socket.
-                clientList.add(clientThread);  //Add it to the client list arrayList.
+                Thread clientThread = new Thread(client);
+                clientList.add(client);
                 clientThread.start();
+            }
+            catch(IOException e){
 
-                //Confirmation message and announcement that a new user has joined the server.
-                System.out.print("\n" + clientThread.userName + " has joined the chat!");
+            }
+        }
+    }
 
-            }//End of loop to wait for connections.
+    //Helper class for server which starts a new thread for every client that connects to the server.  This handles the clients IO for the server.
+    class ClientThread implements Runnable{
 
-            //When keepGoing is detected false, the loop is broken and the server is asked to stop.
+        private String clientName;
+        private Socket clientSocket;
+        private final DataInputStream input;
+        private final DataOutputStream output;
+        private boolean keepGoing;
+
+        public ClientThread (Socket socket, String name, DataInputStream input, DataOutputStream output){
+            this.input = input;
+            this.output = output;
+            this.clientName = name;
+            this.clientSocket = socket;
+            keepGoing = true;
+        }
+
+        @Override
+        public void run() {
+
+            String messageReceived;
+
+            //Main IO loop for the client
+            while (keepGoing){
+
+                try {
+                    messageReceived = input.readUTF();
+
+                    handleCommand(messageReceived);
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }//End of main IO loop
+
             try{
 
-                serverSocket.close();
+                int index = 0;
 
-                //Boot out and close all of the socket threads in the clientThreads list
-                for (int i = 0; i < clientList.size(); ++i){
+                //Find this client thread inside the clientList array in the server.
+                for (ClientThread ct : clientList){
 
-                    ClientThread currentThread = clientList.get(i);
-
-                    try{
-                        currentThread.input.close();
-                        currentThread.output.close();
-                        currentThread.socket.close();
-                    }//End inner-most try-catch for closing individual clients sockets in the clientThread list.
-                    catch(IOException e){
-
-<<<<<<< refs/remotes/origin/Dev_Kiyan
-=======
                     //If the current clients name is equal to the currently iterated client in clientList array, then remove it from the array.
                     if (ct.clientName.equalsIgnoreCase(clientName)){
                         System.out.println(clientName + " has been removed from the server clientList array");
                         clientList.remove(index);
                         break;
->>>>>>> local
                     }
+
+                    index++;
                 }
-            }//End of inner try-catch for stopping the server.
-            catch(Exception e){
-                System.out.print("\nException closing the server and its clients:  " + e);
+
+                input.close();
+                output.close();
+                clientSocket.close();
+            }
+            catch(IOException e){
+                e.printStackTrace();
             }
 
-
-<<<<<<< refs/remotes/origin/Dev_Kiyan
-        }//End of main try-catch for opening a new socket with a port.
-
-        //Something went wrong, maybe port not specified or used.
-        catch (IOException e){
-            String errorMsg = "\n" +  date.format(new Date()) + " Exception on new server socket:  " + e + "\n";
-            System.out.print(errorMsg);
         }
-    }//End start method.
 
-    protected void stop(){
-        keepGoing = false;
-    }
-=======
         //Method to handle any commands passed in from the user chat.  These commands are signaled with a / at the beginning of the message. (ex. /list, /help, /exit, etc.)
         private void handleCommand(String message){
 
@@ -156,11 +157,11 @@ public class Server {
             if (commands[0].charAt(0) == '/'){
                 if (commands[0].equalsIgnoreCase("/help")){
                     System.out.println("1. /myip \n" +
-                                       "2. /myport \n" +
-                                       "3. /list \n" +
-                                       "4. /terminate <client name> \n" +
-                                       "5. /send <client name> <message> \n" +
-                                       "6. /exit \n");
+                            "2. /myport \n" +
+                            "3. /list \n" +
+                            "4. /terminate <client name> \n" +
+                            "5. /send <client name> <message> \n" +
+                            "6. /exit \n");
                 }
 
                 else if (commands[0].equalsIgnoreCase("/myip")) {
@@ -173,29 +174,17 @@ public class Server {
 
                 else if (commands[0].equalsIgnoreCase("/myport"))
                     System.out.println("Listen Port:  " + port);
->>>>>>> local
 
-    //Used to send the message to all clients connected on the server.
-    private synchronized void broadcast(String userName, String message){
+                else if (commands[0].equalsIgnoreCase("/list")){
 
-        String time = date.format(new Date());  //Add a timestamp to the beginning of the message;
-        String stampedMsg = time + " - " + userName + ": " + message;  //New formatted message string which has the following layout:  <HH:mm:ss> - <user name>:  <message>
+                }
 
-        System.out.print("\n" + stampedMsg);
+                else if (commands[0].equalsIgnoreCase("/terminate")){
 
-        //Reverse loop to send this message to all connected clients.
-        //Done in reverse order incase a user has to be removed before the message is broadcasted to all, or if something goes wrong and the current user has to be removed.
-        for(int i = clientList.size(); --i >= 0;) {
+                }
 
-            ClientThread currentThread = clientList.get(i);
+                else if (commands[0].equalsIgnoreCase("/send")){
 
-<<<<<<< refs/remotes/origin/Dev_Kiyan
-            // try to write to the Client if it fails remove it from the list
-            if(!currentThread.writeMsg(stampedMsg)) {
-
-                clientList.remove(i);
-                System.out.print("\nDisconnected Client " + currentThread.userName + " removed from list.");
-=======
                 }
 
                 else if (commands[0].equalsIgnoreCase("/exit")){
@@ -206,31 +195,18 @@ public class Server {
                 else{
                     System.out.print(commands[0] + " is not recognized as a command.  Type /help for a list of commands.");
                 }
->>>>>>> local
             }
-        }
-    }//End broadcast function.
 
-<<<<<<< refs/remotes/origin/Dev_Kiyan
-    //For removing a connected client from the server when they type the terminate command
-    synchronized void remove(int id){
-        //Search the clientList array for the given id
-        for(int i = 0; i < clientList.size(); ++i){
-
-            ClientThread thread = clientList.get(i);
-=======
             //Message sent is not a command order, so broadcast it to all other clients.
             else {
                 //client name through looping
                 //client message for specific name
                 System.out.println(/*client name*/": " /* + client message */);
             }
->>>>>>> local
 
-            if (thread.id == id){
-                clientList.remove(i);
-                return;
-            }
         }
-    }//End remove function.
+
+    }
+
 }
+
