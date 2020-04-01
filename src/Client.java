@@ -61,6 +61,7 @@ public class Client {
             input  = new ObjectInputStream(socket.getInputStream());
             output = new ObjectOutputStream(socket.getOutputStream());
         }
+<<<<<<< refs/remotes/origin/Dev_Kiyan
         catch (IOException eIO) {
             System.out.print("Exception creating new Input/output Streams: " + eIO);
             return false;
@@ -79,6 +80,53 @@ public class Client {
             e.printStackTrace();
         }
 
+=======
+        catch (Exception e) {
+            System.out.println("Exception with IO Streams or creating socket.");
+            e.printStackTrace();
+        }
+
+        //Create new thread to scan system for messages by the user.
+        Thread sendMessage = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                //Continuously grab user input for the chat and send it to server socket.
+                while (true){
+
+                    String message = Chat.input.nextLine();
+
+                    try {
+                        outputStream.writeUTF(message);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                }//End of main input loop
+            }//End of run method
+        });//End of sendMessage thread method
+
+        //Create a new thread to read incoming messages to this client.
+        Thread readMessage = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                //Continuously grab user input for the chat and send it to server socket.
+                while (true){
+                    try {
+                        String message = inputStream.readUTF();
+                        System.out.print("\n" + message);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                }//End of main reading loop
+            }//End of run method
+        });//End of readMessage thread method
+
+        //Start the read/write threads for the client.  All commands will be taken care of server side.
+        sendMessage.start();
+        readMessage.start();
+    }//End of start method
+>>>>>>> local
 
         // Send our username to the server this is the only message that we
         // will send as a String. All other messages will be ChatMessage objects
