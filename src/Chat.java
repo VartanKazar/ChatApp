@@ -35,31 +35,31 @@ public class Chat {
 
 
         try{
-            System.out.print("\n\t" + "Enter server ip or leave blank for localhost default:  ");
+            System.out.print("\nEnter server ip or leave blank for localhost default:  ");
             customServer = input.nextLine();
         }
         catch(InputMismatchException e){
-            System.out.print("\nInput mismatch exception:  " + e);
+            System.out.println("Input mismatch exception:  " + e);
         }
 
         try{
-            System.out.print("\n\t" + "Enter port or leave blank for default:  ");
+            System.out.print("Enter port or leave blank for default:  ");
 
             customPort = Integer.parseInt("0" + input.nextLine());
         }
         catch(InputMismatchException e){
-            System.out.print("\nInput mismatch exception:  " + e);
+            System.out.println("Input mismatch exception:  " + e);
         }
 
         //Check format for server ip string.  If format is incorrect, break out of current switch case to loop back around for input.
         if (!validateIp(serverAddress)){
-            System.out.print("\n" + customServer + " is not a valid ip address!");
+            System.out.println(customServer + " is not a valid ip address!");
             return null;
         }
 
         //Check the format for port, if it is incorrect then break.
         if (customPort < 0 || customPort > 99999){
-            System.out.print("\n" + customPort + " is not a valid port number (between 1 and 99999)!");
+            System.out.println(customPort + " is not a valid port number (between 1 and 99999)!");
             return null;
         }
 
@@ -82,7 +82,7 @@ public class Chat {
 
         //Check if client has been correctly created and is not null.
         if (client == null) {
-            System.out.print("\n\nClient has not been created yet.  Cannot attempt to connect to server when client is null!");
+            System.out.println("Client has not been created yet.  Cannot attempt to connect to server when client is null!");
             return;
         }
 
@@ -106,7 +106,7 @@ public class Chat {
 
             //No command line port was given, so by default port will be set to 8080.
             case 0:
-                System.out.print("\nNo command line argument given on start, defaulting to port 1337...");
+                System.out.println("No command line argument given on start, defaulting to port 1337...");
                 port = 8080;
                 break;
 
@@ -116,7 +116,7 @@ public class Chat {
                     port = Integer.parseInt(args[1]);
                 }
                 catch (Exception e){
-                    System.out.print("\nInvalid port number.");
+                    System.out.println("Invalid port number.");
                 }
 
                 break;
@@ -131,11 +131,11 @@ public class Chat {
         while(!menuSelection.equalsIgnoreCase("/exit")){
 
             System.out.print("\n--------------  MAIN MENU  -----------------\n" +
-                            "1.  /startserver:  Create a new server on your machine using your local ip.\n" +
-                            "2.  /connect:  Prompts you for a server ip and port to connect to.\n" +
-                            "3.  /exit:  terminate this process.\n");
+                    "1.  /startserver: Create a new server on your machine using your local ip.\n" +
+                    "2.  /connect: Prompts you for a server ip and port to connect to.\n" +
+                    "3.  /exit: terminate this process.\n");
 
-            System.out.print("\n\tMain Menu:  ");
+            System.out.print("\tMain Menu: ");
             menuSelection = input.nextLine();  //Get user input for a command.
 
             //An array of the menuSelection string split by any spaces found.  This is to check the inputs first word given for specific commands.
@@ -145,7 +145,7 @@ public class Chat {
 
                 case "/startserver":
 
-                    System.out.print("\n\tStarting server on given port " + port + "....");
+                    System.out.println("Starting server on given port " + port + "....");
 
                     server = new Server(port);  //Instantiate new server with the given port
                     new Thread(server).start();
@@ -159,7 +159,7 @@ public class Chat {
 
                 case "/exit":
                     //input.close();
-                    System.out.print("\n\n\tShutting down the process...");
+                    System.out.println("Shutting down the process...");
                     break;
 
                 default:

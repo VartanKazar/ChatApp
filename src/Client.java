@@ -24,7 +24,7 @@ public class Client {
     }
 
     public void setScanner(){
-       String blah =  Chat.input.nextLine();
+        String blah =  Chat.input.nextLine();
     }
 
     //Starts up the clients connection to the desired server with a given port.
@@ -38,7 +38,7 @@ public class Client {
             isDisconnected = false;
         }
         catch (Exception e) {
-            System.out.print("\n\nException with IO Streams or creating socket.");
+            System.out.println("Exception with IO Streams or creating socket.");
             e.printStackTrace();
         }
 
@@ -48,6 +48,7 @@ public class Client {
             public void run() {
                 //Continuously grab user input for the chat and send it to server socket.
                 while (true){
+
                     String message = Chat.input.nextLine();
 
                     try {

@@ -28,7 +28,8 @@ public class Server implements Runnable {
 
             //Accept the incoming connection request from the client to the server.
             clientSocket = serverSocket.accept();
-            System.out.print("\n\nNew client has been accepted in the server:  " + clientSocket);
+            System.out.println("New client has been accepted in the server:  " + clientSocket
+                    +"\nYou can now type messages to everyone");
 
             //Get IO streams for the client to send to the thread.
             DataInputStream input = new DataInputStream(clientSocket.getInputStream());
@@ -58,9 +59,9 @@ public class Server implements Runnable {
         while(true){
 
             try{
-               //Accept the incoming connection request from the client to the server.
+                //Accept the incoming connection request from the client to the server.
                 clientSocket = serverSocket.accept();
-                System.out.print("\n\nNew client has been accepted in the server:  " + clientSocket + "\n");
+                System.out.println("New client has been accepted in the server: " + clientSocket);
 
                 //Get IO streams for the client to send to the thread.
                 DataInputStream input = new DataInputStream(clientSocket.getInputStream());
@@ -126,7 +127,7 @@ public class Server implements Runnable {
 
                     //If the current clients name is equal to the currently iterated client in clientList array, then remove it from the array.
                     if (ct.clientName.equalsIgnoreCase(clientName)){
-                        System.out.print("\n" + clientName + " has been removed from the server clientList array");
+                        System.out.println(clientName + " has been removed from the server clientList array");
                         clientList.remove(index);
                         break;
                     }
@@ -155,26 +156,24 @@ public class Server implements Runnable {
             //Commands start with / character at beginning.
             if (commands[0].charAt(0) == '/'){
                 if (commands[0].equalsIgnoreCase("/help")){
-                    System.out.print("\n" +
-                                    "1.  /myip\n" +
-                                    "2.  /myport\n" +
-                                    "3.  /list\n" +
-                                    "4.  /myip\n" +
-                                    "5.  /terminate <client name>\n" +
-                                    "6.  /send <client name> <message>\n" +
-                                    "7.  /exit\n");
+                    System.out.println("1. /myip \n" +
+                            "2. /myport \n" +
+                            "3. /list \n" +
+                            "4. /terminate <client name> \n" +
+                            "5. /send <client name> <message> \n" +
+                            "6. /exit \n");
                 }
 
                 else if (commands[0].equalsIgnoreCase("/myip")) {
                     try {
-                        System.out.println("\n\tMy Ip:  " + InetAddress.getLocalHost().getHostAddress() + "\n");
+                        System.out.println("My Ip:  " + InetAddress.getLocalHost().getHostAddress());
                     } catch (UnknownHostException e) {
                         e.printStackTrace();
                     }
                 }
 
                 else if (commands[0].equalsIgnoreCase("/myport"))
-                    System.out.println("\n\tListen Port:  " + port);
+                    System.out.println("Listen Port:  " + port);
 
                 else if (commands[0].equalsIgnoreCase("/list")){
 
@@ -189,18 +188,20 @@ public class Server implements Runnable {
                 }
 
                 else if (commands[0].equalsIgnoreCase("/exit")){
-                    System.out.print("\n\nLogging out...");
+                    System.out.println("Logging out...");
                     keepGoing = false;
                 }
 
                 else{
-                    System.out.print("\n\n\t" + commands[0] + " is not recognized as a command.  Type /help for a list of commands.");
+                    System.out.print(commands[0] + " is not recognized as a command.  Type /help for a list of commands.");
                 }
             }
 
             //Message sent is not a command order, so broadcast it to all other clients.
             else {
-
+                //client name through looping
+                //client message for specific name
+                System.out.println(/*client name*/": " /* + client message */);
             }
 
         }
