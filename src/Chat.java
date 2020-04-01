@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.UnknownHostException;
 import java.util.InputMismatchException;
@@ -10,7 +11,6 @@ public class Chat {
 
     private static int port = 8080;
     private static String serverAddress;
-    private static String userName;
 
     private static Scanner input;
 
@@ -27,7 +27,6 @@ public class Chat {
     private static Client createClient(){
 
         serverAddress = "localhost";
-        userName = "Gman";
 
         String customServer = "";
         int customPort = 0;
@@ -43,7 +42,7 @@ public class Chat {
         }
 
         try{
-            System.out.print("\n\t" + "Enter port or leave blank for 1337 default:  ");
+            System.out.print("\n\t" + "Enter port or leave blank for default:  ");
 
             customPort = Integer.parseInt("0" + input.nextLine());
         }
@@ -73,10 +72,10 @@ public class Chat {
 
         input.close();
 
-        return new Client(serverAddress, port, userName);
+        return new Client(port, serverAddress);
     }
 
-    public static void connect() throws UnknownHostException, InterruptedException {
+    public static void connect() throws InterruptedException {
 
         Client client = createClient();
 
@@ -86,74 +85,18 @@ public class Chat {
             return;
         }
 
-        //Test if we can start the connection to the server with the new client object.
-        if (!client.start()) {
-            System.out.print("\n\nClient has failed to start!");
-            return;
+        try {
+            client.start();
+            while(!client.isDisconnected);
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-//
-//        input = new Scanner(System.in);
-//
-//        while(true){
-//
-//            System.out.print("\n\tinput:  ");
-//
-//            String msg = input.nextLine();
-//
-//            System.out.print("\n\tYou typed:  " + msg);
-//
-//            //Log out of server if user typed the logout message.
-//            if (msg.equalsIgnoreCase("exit")){
-//
-//                break;
-//            }
-//
-//            //Client requests a list of connected users with the list command.
-//            else if (msg.equalsIgnoreCase("list")){
-//
-//            }
-//
-//
-//            //Client asks for help with the help command.  No other users are required to see this so it isn't transmitted.
-//            else if (msg.equalsIgnoreCase("help")){
-//                System.out.print("\n----------------------------------------------------------------------------------------\n" +
-//                        "\t\t\tAvailable Commands" +
-//                        "\nhelp:  Display information about the available user interface options or command manual." +
-//                        "\nmyip:  Display the IP address of this process." +
-//                        "\nmyport:  Display the port on which this process is listening for incoming connections." +
-//                        "\nlist:  Display a numbered list of all the connections this process is part of." +
-//                        "\nterminate <connection id.>:  This command will terminate the connection listed under the specified number when LIST is used to display all connections." +
-//                        "\nsend <connection id.> <chatMsg>:  Sends a chatMsg to the specified connected user." +
-//                        "\nexit:  exits out of the program and the server." +
-//                        "\n----------------------------------------------------------------------------------------\n");
-//            }
-//
-//            //Client asks for their own ip using the myip command.
-//            else if (msg.equalsIgnoreCase("myip")){
-//                System.out.print("\n\t" + userName + " ip address:  " + InetAddress.getLocalHost().getHostAddress());
-//            }
-//
-//            //client asks for the port of the connection using the myport command.
-//            else if (msg.equalsIgnoreCase("myport")){
-//                System.out.print("\n\t" + userName + " port:  " + port);
-//            }
-//
-//            //Client boots out another user from the server using the terminate command with the given user number from the list command.
-//            else if (msg.contains("terminate")){
-//
-//            }
-//
-//            //Default case where the user inputs a generic message that is not a command.
-//            else {
-//
-//            }
-//        }
-//
-//        input.close();
-        client.disconnect();
+
+
     }
 
-    public static void main(String[] args) throws UnknownHostException, InterruptedException {
+    public static void main(String[] args) throws IOException, InterruptedException {
 
         Server server = null;
 
@@ -187,12 +130,11 @@ public class Chat {
         while(!menuSelection.equalsIgnoreCase("exit")){
 
             System.out.print("\n--------------  MAIN MENU  -----------------\n" +
-                            "1.  startserver:  Create a new server on your machine using your local ip.\n" +
-                            "2.  connect:  Prompts you for a server ip and port to connect to.\n" +
-                            "3.  stopserver:  If a server exists on this machine, this command will close all connections to it, then stop the server." +
-                            "3.  exit:  terminate this process.\n");
+                            "1.  /startserver:  Create a new server on your machine using your local ip.\n" +
+                            "2.  /connect:  Prompts you for a server ip and port to connect to.\n" +
+                            "3.  /exit:  terminate this process.\n");
 
-            System.out.print("\n\tcmd:  ");
+            System.out.print("\n\tMain Menu:  ");
             menuSelection = input.nextLine();  //Get user input for a command.
 
             //An array of the menuSelection string split by any spaces found.  This is to check the inputs first word given for specific commands.
@@ -200,7 +142,7 @@ public class Chat {
 
             switch(menuAry[0]){
 
-                case "startserver":
+                case "/startserver":
 
                     System.out.print("\n\tStarting server on given port " + port + "....");
 
@@ -209,24 +151,18 @@ public class Chat {
 
                     break;
 
-                case "connect":
+                case "/connect":
                     connect();
+
                     break;
 
-                case "stopserver":
-                    System.out.print("\n\nStopping server...");
-
-                    if (server != null)
-                        server.stop();
-                    break;
-
-                case "exit":
+                case "/exit":
                     input.close();
                     System.out.print("\n\n\tShutting down the process...");
                     break;
 
                 default:
-                    System.out.println("\"" + menuSelection + "\" is not a valid command.  Type \"help\" for a list of accepted commands");
+                    System.out.println("\"" + menuSelection + "\" is not a valid command.");
                     break;
 
             }//End switch case for user input.
