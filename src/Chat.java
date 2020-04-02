@@ -1,9 +1,6 @@
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.UnknownHostException;
 import java.util.InputMismatchException;
 import java.util.Scanner;
-import java.net.InetAddress;
 import java.lang.Exception;
 
 
@@ -31,8 +28,6 @@ public class Chat {
 
         String customServer = "";
         int customPort = 0;
-
-
 
         try{
             System.out.print("\nEnter server ip or leave blank for localhost default:  ");
@@ -71,8 +66,6 @@ public class Chat {
         if (customPort != 0)
             port = customPort;
 
-        //input.close();
-
         return new Client(port, serverAddress);
     }
 
@@ -89,7 +82,6 @@ public class Chat {
         try {
             client.start();
             while(!client.isDisconnected);
-
         } catch (IOException e) {
             e.printStackTrace();
         }

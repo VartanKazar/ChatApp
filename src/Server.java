@@ -1,10 +1,7 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.util.ArrayList;
 
 public class Server implements Runnable {
@@ -28,8 +25,7 @@ public class Server implements Runnable {
 
             //Accept the incoming connection request from the client to the server.
             clientSocket = serverSocket.accept();
-            System.out.println("New client has been accepted in the server:  " + clientSocket
-                    +"\nYou can now type messages to everyone");
+            System.out.println("New client has been accepted in the server:  " + clientSocket);
 
             //Get IO streams for the client to send to the thread.
             DataInputStream input = new DataInputStream(clientSocket.getInputStream());
@@ -150,7 +146,7 @@ public class Server implements Runnable {
 
             //Grab the first three words in the message, the rest are irrelevant for the command.
             String[] commands = new String[3];
-            commands = message.split(" ", 3);
+            commands = message.split(" ", 2);
 
             //Check first character of the string to see if the message sent is a command.
             //Commands start with / character at beginning.
@@ -177,6 +173,11 @@ public class Server implements Runnable {
 
                 else if (commands[0].equalsIgnoreCase("/list")){
 
+                    System.out.printf("\n%-12s%-20s%-10s", "ID" , "Ip Address", "Port No.");
+                    for (ClientThread ct : clientList)
+                        System.out.printf("\n%-12s%-20s%-10s", ct.clientName, ct.clientSocket.getInetAddress().getHostAddress(), ct.clientSocket.getPort());
+
+                    System.out.print("\n");
                 }
 
                 else if (commands[0].equalsIgnoreCase("/terminate")){
@@ -184,7 +185,15 @@ public class Server implements Runnable {
                 }
 
                 else if (commands[0].equalsIgnoreCase("/send")){
-
+                    for (ClientThread ct : clientList){
+                        if (ct.clientName.equalsIgnoreCase(commands[1])) {
+                            try {
+                                ct.output.writeUTF("\n" + clientName + ": " + message + "\n");
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
                 }
 
                 else if (commands[0].equalsIgnoreCase("/exit")){
@@ -199,9 +208,13 @@ public class Server implements Runnable {
 
             //Message sent is not a command order, so broadcast it to all other clients.
             else {
-                //client name through looping
-                //client message for specific name
-                System.out.println(/*client name*/": " /* + client message */);
+                for (ClientThread ct : clientList){
+                    try {
+                        ct.output.writeUTF("\n" + clientName + ": " + message + "\n");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
 
         }

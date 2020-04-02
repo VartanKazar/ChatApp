@@ -2,7 +2,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Scanner;
 
 
 //The main part of the project.  Allows those who run this class to connected to an already opened TCP channel, given an ip, port, and a user name.
@@ -21,10 +20,6 @@ public class Client {
         this.port = port;
         this.server = server;
         isDisconnected = true;
-    }
-
-    public void setScanner(){
-        String blah =  Chat.input.nextLine();
     }
 
     //Starts up the clients connection to the desired server with a given port.
