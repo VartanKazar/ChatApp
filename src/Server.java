@@ -78,6 +78,23 @@ public class Server implements Runnable {
         }
     }
 
+    private void removeUser(String clientName){
+        int index = 0;
+
+        //Find this client thread inside the clientList array in the server.
+        for (ClientThread ct : clientList){
+
+            //If the current clients name is equal to the currently iterated client in clientList array, then remove it from the array.
+            if (ct.clientName.equalsIgnoreCase(clientName))
+                break;
+
+            index++;
+        }
+
+        System.out.println(clientName + " has been removed from the server clientList array");
+        clientList.remove(index);
+    }
+
     //Helper class for server which starts a new thread for every client that connects to the server.  This handles the clients IO for the server.
     class ClientThread implements Runnable{
 
@@ -114,31 +131,7 @@ public class Server implements Runnable {
 
             }//End of main IO loop
 
-            try{
-
-                int index = 0;
-
-                //Find this client thread inside the clientList array in the server.
-                for (ClientThread ct : clientList){
-
-                    //If the current clients name is equal to the currently iterated client in clientList array, then remove it from the array.
-                    if (ct.clientName.equalsIgnoreCase(clientName)){
-                        System.out.println(clientName + " has been removed from the server clientList array");
-                        clientList.remove(index);
-                        break;
-                    }
-
-                    index++;
-                }
-
-                input.close();
-                output.close();
-                clientSocket.close();
-            }
-            catch(IOException e){
-                e.printStackTrace();
-            }
-
+            removeUser(clientName);
         }
 
         //Method to handle any commands passed in from the user chat.  These commands are signaled with a / at the beginning of the message. (ex. /list, /help, /exit, etc.)
@@ -146,52 +139,96 @@ public class Server implements Runnable {
 
             //Grab the first three words in the message, the rest are irrelevant for the command.
             String[] commands = new String[3];
-            commands = message.split(" ", 2);
+            commands = message.split(" ", 3);
 
             //Check first character of the string to see if the message sent is a command.
             //Commands start with / character at beginning.
             if (commands[0].charAt(0) == '/'){
                 if (commands[0].equalsIgnoreCase("/help")){
-                    System.out.println("1. /myip \n" +
-                            "2. /myport \n" +
-                            "3. /list \n" +
-                            "4. /terminate <client name> \n" +
-                            "5. /send <client name> <message> \n" +
-                            "6. /exit \n");
-                }
-
-                else if (commands[0].equalsIgnoreCase("/myip")) {
                     try {
-                        System.out.println("My Ip:  " + InetAddress.getLocalHost().getHostAddress());
-                    } catch (UnknownHostException e) {
+                        output.writeUTF("\n1. /myip \n" +
+                                "2. /myport \n" +
+                                "3. /list \n" +
+                                "4. /terminate <client name> \n" +
+                                "5. /send <client name> <message> \n" +
+                                "6. /exit \n");
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
 
-                else if (commands[0].equalsIgnoreCase("/myport"))
-                    System.out.println("Listen Port:  " + port);
+                else if (commands[0].equalsIgnoreCase("/myip")) {
+                    try {
+                        output.writeUTF("\nMy Ip:  " + InetAddress.getLocalHost().getHostAddress() + "\n");
+                    } catch (UnknownHostException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                else if (commands[0].equalsIgnoreCase("/myport")) {
+                    try {
+                        output.writeUTF("\nListen Port:  " + port + "\n");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
 
                 else if (commands[0].equalsIgnoreCase("/list")){
 
-                    System.out.printf("\n%-12s%-20s%-10s", "ID" , "Ip Address", "Port No.");
-                    for (ClientThread ct : clientList)
-                        System.out.printf("\n%-12s%-20s%-10s", ct.clientName, ct.clientSocket.getInetAddress().getHostAddress(), ct.clientSocket.getPort());
+                    String list = "";
+                    int index = 0;
+                    ClientThread target = null;
+
+                    list += String.format("\n%-12s%-20s%-10s\n", "ID" , "Ip Address", "Port No.");
+
+                    //Build the list of clients as a string for printing
+                    for (ClientThread ct : clientList) {
+                        list += String.format("%-12s%-20s%-10s\n", ct.clientName, ct.clientSocket.getInetAddress().getHostAddress(), ct.clientSocket.getPort());
+
+                        if (ct.clientName.equalsIgnoreCase(clientName))
+                            target = ct;
+                    }
+
+                    try {
+                        target.output.writeUTF(list);  //Write the list string ONLY to the client that requested it.
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
 
                     System.out.print("\n");
                 }
 
                 else if (commands[0].equalsIgnoreCase("/terminate")){
+                    int index = 0;
 
+                    for (ClientThread ct : clientList){
+                        if (ct.clientName.equalsIgnoreCase(commands[1])) {
+                            try {
+                                ct.input.close();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
+                            break;
+                        }
+                        index++;
+                    }
+
+                    //remove the client thread from the clientList array
+                    clientList.remove(index);
                 }
 
                 else if (commands[0].equalsIgnoreCase("/send")){
                     for (ClientThread ct : clientList){
                         if (ct.clientName.equalsIgnoreCase(commands[1])) {
                             try {
-                                ct.output.writeUTF("\n" + clientName + ": " + message + "\n");
+                                ct.output.writeUTF("\n*DM* " + clientName + ": " + commands[2] + "\n");
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
+                            break;
                         }
                     }
                 }
@@ -199,6 +236,7 @@ public class Server implements Runnable {
                 else if (commands[0].equalsIgnoreCase("/exit")){
                     System.out.println("Logging out...");
                     keepGoing = false;
+
                 }
 
                 else{

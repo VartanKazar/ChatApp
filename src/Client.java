@@ -77,6 +77,4 @@ public class Client {
         sendMessage.start();
         readMessage.start();
     }//End of start method
-
-
 }

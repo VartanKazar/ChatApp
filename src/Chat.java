@@ -81,6 +81,7 @@ public class Chat {
 
         try {
             client.start();
+            System.out.println("For help with commands, type /help.  To broadcast a message to everyone just type a message.");
             while(!client.isDisconnected);
         } catch (IOException e) {
             e.printStackTrace();
